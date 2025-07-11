@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>My Favorites</title>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <h2>My Favorite Courses</h2>
+
+    <div th:if="${favoriteCourses.isEmpty()}">
+        <p>You haven't favorited any courses yet.</p>
+    </div>
+    <div th:unless="${favoriteCourses.isEmpty()}">
+        <div th:each="course : ${favoriteCourses}" style="border: 1px solid #ccc; margin-bottom: 10px; padding: 10px;">
+            <h3><a href="#" th:href="'/courses/' + ${course.id}" th:text="${course.title}">Course Title</a></h3>
+            <p><strong>Subject:</strong> <span th:text="${course.subject}">Subject</span></p>
+            <p><strong>Duration:</strong> <span th:text="${course.duration}">Duration</span></p>
+            <p><strong>Price:</strong> <span th:text="${course.price}">Price</span></p>
+
+            <form th:action="'/courses/favorite/remove/' + ${course.id}" method="post" style="display: inline;">
+                <button type="submit">Remove from Favorites</button>
+            </form>
+        </div>
+    </div>
+    <br/>
+    <p><a href="/courses">Back to Course List</a></p>
+</main>
+
+</body>
+</html>

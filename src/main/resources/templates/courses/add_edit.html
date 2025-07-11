@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Детали курса</title>
+    <style>
+        .course-actions form, .course-actions a {
+            display: inline-block;
+            margin-right: 15px;
+            margin-top: 10px;
+        }
+        .course-actions button {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .edit-button { background-color: #ffc107; color: black; border: none; }
+        .edit-button:hover { background-color: #e0a800; }
+        .delete-button { background-color: #dc3545; color: white; border: none; }
+        .delete-button:hover { background-color: #c82333; }
+        .rating-form label, .rating-form input, .rating-form button {
+            display: inline-block;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+        .rating-form input[type="number"] {
+            width: 60px;
+            padding: 5px;
+        }
+        .back-link {
+            display: block;
+            margin-top: 20px;
+        }
+        .course-tags-display span {
+            background-color: #e9ecef;
+            padding: 4px 8px;
+            margin-right: 5px;
+            border-radius: 3px;
+            font-size: 0.9em;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+        .average-rating {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #28a745;
+            margin-bottom: 15px;
+        }
+        .no-rating {
+            color: #6c757d;
+            font-style: italic;
+        }
+        .user-rating-display {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #007bff;
+        }
+        .disabled-rating-form {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <div th:if="${course}">
+        <h2>Детали курса: <span th:text="${course.title}">Название курса</span></h2>
+
+        <p><strong>Тематика:</strong> <span th:text="${course.subject}">Тематика</span></p>
+        <p><strong>Продолжительность:</strong> <span th:text="${course.duration}">Продолжительность</span></p>
+        <p><strong>Стоимость:</strong> <span th:text="${course.price}">Стоимость</span></p>
+        <p><strong>Описание:</strong> <span th:text="${course.description}">Описание</span></p>
+
+        <div th:if="${not course.tags.empty}">
+            <strong>Теги:</strong>
+            <div class="course-tags-display">
+                <span th:each="tag : ${course.tags}" th:text="${tag.name}">Тег</span>
+            </div>
+        </div>
+
+        <div class="average-rating" th:if="${averageRating != null && averageRating > 0}">
+            Средняя оценка: <span th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</span> / 5.0
+        </div>
+        <div class="average-rating no-rating" th:unless="${averageRating != null && averageRating > 0}">
+        </div>
+
+        <div th:if="${currentUser}">
+            <div th:if="${userRating != null}">
+                <p class="user-rating-display">
+                    Ваша оценка: <span th:text="${userRating.score}">5</span> / 5
+                </p>
+                <p>Вы уже оценили этот курс. Изменить оценку нельзя.</p>
+            </div>
+            <div th:unless="${userRating != null}">
+                <form th:action="'/courses/' + ${course.id} + '/rate'" method="post" class="rating-form">
+                    <label for="score">Ваша оценка (1-5):</label>
+                    <input type="number" id="score" name="score" min="1" max="5" value="5"/>
+                    <button type="submit">Оценить</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="course-actions" style="margin-top: 10px;">
+            <form th:action="'/courses/favorite/add/' + ${course.id}" method="post" style="display: inline;">
+                <button type="submit">Добавить в избранное</button>
+            </form>
+
+            <a th:href="'/courses/' + ${course.id} + '/edit'" class="edit-button">Редактировать курс</a>
+
+            <form th:action="'/courses/' + ${course.id} + '/delete'" method="post" style="display: inline;">
+                <button type="submit" class="delete-button" onclick="return confirm('Вы уверены, что хотите удалить этот курс?');">Удалить курс</button>
+            </form>
+        </div>
+
+        <a href="/courses" class="back-link">Назад к списку курсов</a>
+    </div>
+    <div th:unless="${course}">
+        <p>Курс не найден.</p>
+        <p><a href="/courses">Вернуться к списку курсов</a></p>
+    </div>
+</main>
+
+</body>
+</html>

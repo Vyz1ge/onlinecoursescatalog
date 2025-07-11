@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Список курсов</title>
+    <style>
+        .course-actions form, .course-actions a {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .course-actions button {
+            padding: 5px 10px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            color: #343a40;
+        }
+        .course-actions button:hover {
+            background-color: #e2e6ea;
+        }
+        .edit-button { background-color: #ffc107; color: black; border: none; }
+        .edit-button:hover { background-color: #e0a800; }
+        .delete-button { background-color: #dc3545; color: white; border: none; }
+        .delete-button:hover { background-color: #c82333; }
+        .management-links { margin-bottom: 20px; }
+        .management-links a {
+            display: inline-block;
+            padding: 10px 15px;
+            margin-right: 10px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9em;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .add-course-button { background-color: #28a745; }
+        .add-course-button:hover { background-color: #218838; }
+        .add-tag-button { background-color: #007bff; }
+        .add-tag-button:hover { background-color: #0056b3; }
+        .favorites-link { background-color: #6c757d; }
+        .favorites-link:hover { background-color: #5a6268; }
+        .tag-filter a { margin-right: 10px;}
+        /* Стили для отображения рейтинга */
+        .average-rating { font-weight: bold; font-size: 1.1em; color: #28a745; margin-bottom: 15px; }
+        .no-rating { color: #6c757d; font-style: italic; }
+        .user-rating-display { font-weight: bold; color: #007bff; }
+        .rating-section { margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <h2>Список онлайн-курсов</h2>
+
+    <div class="management-links">
+        <a href="/courses/new" class="add-course-button">Добавить новый курс</a>
+        <a href="/tags/new" class="add-tag-button">Добавить новый тег</a>
+        <a href="/courses/my-favorites" class="favorites-link">Мои избранные курсы</a>
+    </div>
+
+    <div class="tag-filter">
+        <strong>Фильтр по тегам:</strong>
+        <a href="/courses">Все</a>
+        <span th:each="tag : ${tags}">
+                | <a href="#" th:href="'/courses/tag/' + ${tag.name}" th:text="${tag.name}">Имя тега</a>
+            </span>
+    </div>
+    <br/>
+
+    <p style="color: green;" th:if="${success}" th:text="${success}">Сообщение об успехе</p>
+    <p style="color: red;" th:if="${error}" th:text="${error}">Сообщение об ошибке</p>
+
+    <div th:if="${courses.isEmpty()}">
+        <p>Курсы не найдены.</p>
+    </div>
+    <div th:unless="${courses.isEmpty()}">
+        <div th:each="course : ${courses}" style="border: 1px solid #ccc; margin-bottom: 15px; padding: 15px; border-radius: 5px;">
+            <h3><a href="#" th:href="'/courses/' + ${course.id}" th:text="${course.title}">Название курса</a></h3>
+            <p><strong>Тематика:</strong> <span th:text="${course.subject}">Тематика</span></p>
+            <p><strong>Продолжительность:</strong> <span th:text="${course.duration}">Продолжительность</span></p>
+            <p><strong>Стоимость:</strong> <span th:text="${course.price}">Стоимость</span></p>
+
+            <div th:if="${not course.tags.isEmpty()}">
+                <strong>Теги:</strong>
+                <span th:each="tag : ${course.tags}" th:text="${tag.name}">Тег</span>
+            </div>
+
+            <div class="average-rating" th:if="${averageRating != null && averageRating > 0}">
+                Средняя оценка: <span th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</span> / 5.0
+            </div>
+            <div class="average-rating no-rating" th:unless="${averageRating != null && averageRating > 0}">
+            </div>
+
+            <div class="rating-section">
+                <th:block th:if="${currentUser != null}">
+                    <th:block th:if="${userRatingsMap != null && userRatingsMap.containsKey(course.id)}">
+                        <p class="user-rating-display">
+                            Ваша оценка: <span th:text="${userRatingsMap.get(course.id).score}">5</span> / 5
+                        </p>
+                    </th:block>
+                    <th:block th:unless="${userRatingsMap != null && userRatingsMap.containsKey(course.id)}">
+                        <form th:action="'/courses/' + ${course.id} + '/rate'" method="post" style="display: inline;">
+                            <label for="score">Оценить (1-5):</label>
+                            <input type="number" id="score" name="score" min="1" max="5" value="5" style="width: 60px; padding: 5px;"/>
+                            <button type="submit">Оценить</button>
+                        </form>
+                    </th:block>
+                </th:block>
+                <th:block th:unless="${currentUser != null}">
+                    <p>Войдите, чтобы оценить курс.</p>
+                </th:block>
+            </div>
+
+            <div class="course-actions" style="margin-top: 10px;">
+                <form th:action="'/courses/favorite/add/' + ${course.id}" method="post" style="display: inline;">
+                    <button type="submit">Добавить в избранное</button>
+                </form>
+
+                <a th:href="'/courses/' + ${course.id} + '/edit'" class="edit-button">Редактировать</a>
+
+                <form th:action="'/courses/' + ${course.id} + '/delete'" method="post" style="display: inline;">
+                    <button type="submit" class="delete-button" onclick="return confirm('Вы уверены, что хотите удалить этот курс?');">Удалить</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

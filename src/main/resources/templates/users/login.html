@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Login</title>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <h2>Login</h2>
+    <p style="color: red;" th:if="${error}" th:text="${error}">Error message</p>
+    <form action="/login" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required/>
+        <br/>
+        <button type="submit">Login</button>
+    </form>
+</main>
+
+</body>
+</html>

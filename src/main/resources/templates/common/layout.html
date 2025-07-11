@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title layout:title-pattern="$DECORATOR_TITLE - $CONTENT_TITLE">Online Courses Catalog</title>
+</head>
+<body>
+
+<header>
+    <h1>Online Courses Catalog</h1>
+    <nav>
+        <a href="/">Home</a> |
+        <a href="/courses">Courses</a> |
+        <span th:if="${currentUser != null}">
+                Welcome, <span th:text="${currentUser.username}">User</span>! |
+                <a href="/courses/my-favorites">My Favorites</a> |
+                <a href="/logout">Logout</a>
+            </span>
+        <span th:unless="${currentUser != null}">
+                <a href="/">Login</a>
+            </span>
+    </nav>
+</header>
+
+<main layout:fragment="content">
+    This is the default content.
+</main>
+
+<footer>
+    <p>© 2023 Online Courses Catalog</p>
+</footer>
+
+</body>
+</html>
