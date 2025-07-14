@@ -15,9 +15,6 @@
             cursor: pointer;
             border-radius: 4px;
         }
-        .edit-button { background-color: #ffc107; color: black; border: none; }
-        .edit-button:hover { background-color: #e0a800; }
-        .delete-button { background-color: #dc3545; color: white; border: none; }
         .delete-button:hover { background-color: #c82333; }
         .rating-form label, .rating-form input, .rating-form button {
             display: inline-block;
@@ -51,6 +48,11 @@
             color: #6c757d;
             font-style: italic;
         }
+        .user-rating-display {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #007bff;
+        }
     </style>
 </head>
 <body>
@@ -77,15 +79,18 @@
         <div class="average-rating no-rating" th:unless="${averageRating != null && averageRating > 0}">
         </div>
 
+        <div th:if="${currentUser}">
+            <div th:if="${userRating != null}">
+                <p class="user-rating-display">
+                    Ваша оценка: <span th:text="${userRating.score}">5</span> / 5
+                </p>
+                <p>Вы уже оценили этот курс. Изменить оценку нельзя.</p>
+            </div>
+        </div>
+
         <div class="course-actions">
             <form th:action="'/courses/favorite/add/' + ${course.id}" method="post" style="display: inline;">
                 <button type="submit">Добавить в избранное</button>
-            </form>
-
-            <form th:action="'/courses/' + ${course.id} + '/rate'" method="post" class="rating-form">
-                <label for="score">Оценить (1-5):</label>
-                <input type="number" id="score" name="score" min="1" max="5" value="5"/>
-                <button type="submit">Оценить</button>
             </form>
 
             <a th:href="'/courses/' + ${course.id} + '/edit'" class="edit-button">Редактировать курс</a>

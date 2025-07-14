@@ -1,11 +1,13 @@
 package com.example.onlinecoursescatalog.repository;
 
 import com.example.onlinecoursescatalog.model.Course;
+import com.example.onlinecoursescatalog.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Repository
@@ -19,4 +21,9 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
 
     @Query("SELECT AVG(r.score) FROM Rating r WHERE r.course.id = :courseId")
     Double findAverageRatingByCourseId(Long courseId);
+
+    List<Course> findCoursesByUser(User user);
+
+
+    long count();
 }

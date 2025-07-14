@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import jakarta.persistence.*;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -19,10 +20,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Enumerated
+    private Role role;
+
+    @OneToMany(mappedBy = "user")
+    private List<Course> courses;
+
     @Column(nullable = false, unique = true)
     private String username;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY,cascade = CascadeType.REMOVE)
     @JoinTable(
             name = "user_favorite_courses",
             joinColumns = @JoinColumn(name = "user_id"),

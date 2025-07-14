@@ -8,9 +8,7 @@ import lombok.Setter;
 
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Getter
@@ -27,7 +25,6 @@ public class CourseDTO {
 
     private String duration;
 
-    // Добавлены аннотации валидации для цены
     @NotNull(message = "Стоимость не может быть пустой")
     @DecimalMin(value = "0.00", message = "Стоимость не может быть отрицательной")
     @Digits(integer = 10, fraction = 2, message = "Некорректный формат стоимости (например, 99.99)")

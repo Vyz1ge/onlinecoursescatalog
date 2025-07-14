@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{common/layout}">
+<head>
+    <title>Статистика приложения</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
+    <style>
+        .chart-container {
+            width: 90%;
+            max-width: 700px;
+            margin: 30px auto;
+            background-color: #ffffff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        .stats-summary {
+            margin-bottom: 40px;
+            font-size: 1.2em;
+            text-align: center;
+            padding: 20px;
+            background-color: #eef2f7;
+            border-left: 5px solid #007bff;
+            border-radius: 5px;
+        }
+        .stats-summary span {
+            font-weight: bold;
+            margin: 0 25px;
+            color: #333;
+        }
+        .stats-summary span strong {
+            color: #007bff;
+        }
+        h2 {
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 30px;
+        }
+        h3 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #555;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            width: 100% !important;
+            height: 300px !important;
+        }
+
+        .chartjs-tooltip {
+            opacity: 1;
+            pointer-events: none;
+            position: absolute;
+            background: rgba(0, 0, 0, .7);
+            color: white;
+            border-radius: 3px;
+            -webkit-transition: all .1s ease;
+            transition: all .1s ease;
+            z-index: 1000;
+        }
+
+        .chartjs-tooltip table {
+            margin: 0;
+        }
+
+        .chartjs-tooltip-key {
+            display: inline-block;
+            margin-right: 5px;
+            width: 10px;
+            height: 10px;
+        }
+
+    </style>
+</head>
+<body>
+
+<main layout:fragment="content">
+    <h2>Статистика приложения</h2>
+
+    <div class="stats-summary">
+        <span>Всего курсов: <strong><span th:text="${courseCount}">0</span></strong></span>
+        <span>Всего пользователей: <strong><span th:text="${userCount}">0</span></strong></span>
+    </div>
+
+    <div class="chart-container">
+        <h3>Распределение оценок курсов</h3>
+        <canvas id="ratingChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <h3>Общее количество курсов и пользователей</h3>
+        <canvas id="countsChart"></canvas>
+    </div>
+
+    <script th:inline="javascript">
+
+
+        Chart.register(ChartDataLabels);
+
+        const ratingLabels = /*[[${ratingLabels}]]*/ [];
+        const ratingData = /*[[${ratingData}]]*/ [];
+        const courseCount = /*[[${courseCount}]]*/ 0;
+        const userCount = /*[[${userCount}]]*/ 0;
+
+
+        const colors = [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(255, 159, 64, 0.8)',
+            'rgba(255, 205, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(54, 162, 235, 0.8)'
+        ];
+        const borderColors = [
+            'rgb(255, 99, 132)',
+            'rgb(255, 159, 64)',
+            'rgb(255, 205, 86)',
+            'rgb(75, 192, 192)',
+            'rgb(54, 162, 235)'
+        ];
+
+
+
+        const ratingCtx = document.getElementById('ratingChart').getContext('2d');
+        const ratingChart = new Chart(ratingCtx, {
+            type: 'bar',
+            data: {
+                labels: ratingLabels.map(score => {
+                    if (score === 1) return '1 звезда';
+                    if (score >= 2 && score <= 4) return score + ' звезды';
+                    if (score === 5) return '5 звезд';
+                    return score + ' звезд';
+                }),
+                datasets: [{
+                    label: 'Количество оценок',
+                    data: ratingData,
+                    backgroundColor: colors,
+                    borderColor: borderColors,
+                    borderWidth: 1,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) { if (value % 1 === 0) { return value; } } // Только целые числа
+                        },
+                        title: {
+                            display: true,
+                            text: 'Количество оценок'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Оценка (звезды)'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Распределение оценок по звездам',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        enabled: true
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: Math.round,
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+
+
+        const countsCtx = document.getElementById('countsChart').getContext('2d');
+        const countsChart = new Chart(countsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Курсы', 'Пользователи'],
+                datasets: [{
+                    label: 'Количество',
+                    data: [courseCount, userCount],
+                    backgroundColor: [
+                        'rgba(153, 102, 255, 0.8)',
+                        'rgba(201, 203, 207, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgb(153, 102, 255)',
+                        'rgb(201, 203, 207)'
+                    ],
+                    borderWidth: 1,
+                    barPercentage: 0.7,
+                    categoryPercentage: 0.8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) { if (value % 1 === 0) { return value; } }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Количество'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    title: {
+                        display: true,
+                        text: 'Общее количество курсов и пользователей',
+                        font: {
+                            size: 16
+                        }
+                    },
+                    tooltip: {
+                        enabled: true
+                    },
+                    datalabels: {
+                        anchor: 'end',
+                        align: 'top',
+                        formatter: Math.round,
+                        font: {
+                            weight: 'bold'
+                        }
+                    }
+                }
+            }
+        });
+
+
+        Chart.register(ChartDataLabels);
+
+
+        /*]]>*/
+    </script>
+</main>
+
+</body>
+</html>

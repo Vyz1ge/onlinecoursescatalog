@@ -1,12 +1,11 @@
 package com.example.onlinecoursescatalog.controller;
 
 import com.example.onlinecoursescatalog.dto.CourseDTO;
-import com.example.onlinecoursescatalog.model.Course;
-import com.example.onlinecoursescatalog.model.Rating;
-import com.example.onlinecoursescatalog.model.Tag;
-import com.example.onlinecoursescatalog.model.User;
+import com.example.onlinecoursescatalog.model.*;
 import com.example.onlinecoursescatalog.service.CourseService;
 import com.example.onlinecoursescatalog.service.TagService;
+import com.example.onlinecoursescatalog.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,26 +15,18 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/courses")
+@RequiredArgsConstructor
 public class CourseController {
 
     private final CourseService courseService;
     private final TagService tagService;
-
-    @Autowired
-    public CourseController(CourseService courseService, TagService tagService) {
-        this.courseService = courseService;
-        this.tagService = tagService;
-    }
+    private final UserService userService;
 
     @GetMapping
     public String listCourses(Model model, @SessionAttribute(name = "currentUser", required = false) User currentUser) {
@@ -43,7 +34,14 @@ public class CourseController {
             return "redirect:/";
         }
 
-        List<Course> courses = courseService.getAllCourses();
+        List<Course> courses;
+
+        if (currentUser.getRole() == Role.ADMIN){
+            courses = courseService.getAllCourses();
+        } else {
+            courses = courseService.getCoursesByUserId(currentUser);
+        }
+
         List<Tag> tags = tagService.getAllTags();
 
         Map<Long, Rating> userRatingsMap = new HashMap<>();
@@ -144,9 +142,8 @@ public class CourseController {
                                 .orElseThrow(() -> new EntityNotFoundException("Тег не найден с ID: " + tagId)))
                         .collect(Collectors.toSet());
             }
-            course.setTags(selectedTags);
 
-            Course savedCourse = courseService.saveCourse(course);
+            Course savedCourse = courseService.saveCourseForUser(course, currentUser.getUsername());
             redirectAttributes.addFlashAttribute("success", "Курс '" + savedCourse.getTitle() + "' успешно создан!");
             return "redirect:/courses";
         } catch (EntityNotFoundException e) {
@@ -207,7 +204,6 @@ public class CourseController {
                         .collect(Collectors.toSet());
             }
             existingCourse.setTags(selectedTags);
-
             Course updatedCourse = courseService.saveCourse(existingCourse);
             redirectAttributes.addFlashAttribute("success", "Курс '" + updatedCourse.getTitle() + "' успешно обновлен!");
             return "redirect:/courses";

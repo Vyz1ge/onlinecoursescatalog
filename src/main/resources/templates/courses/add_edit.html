@@ -3,35 +3,53 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{common/layout}">
 <head>
-    <title>Детали курса</title>
+    <title th:text="${isNew} ? 'Добавить новый курс' : 'Редактировать курс'">Форма курса</title>
     <style>
-        .course-actions form, .course-actions a {
-            display: inline-block;
-            margin-right: 15px;
-            margin-top: 10px;
-        }
-        .course-actions button {
-            padding: 8px 12px;
-            cursor: pointer;
+        .error-message { color: red; }
+        .success-message { color: green; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold;}
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
             border-radius: 4px;
         }
-        .edit-button { background-color: #ffc107; color: black; border: none; }
-        .edit-button:hover { background-color: #e0a800; }
-        .delete-button { background-color: #dc3545; color: white; border: none; }
-        .delete-button:hover { background-color: #c82333; }
-        .rating-form label, .rating-form input, .rating-form button {
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+            border-radius: 4px;
+            min-height: 100px;
+            background-color: white;
+        }
+        .form-actions button {
+            padding: 10px 15px;
+            margin-right: 10px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        .form-actions button:hover {
+            background-color: #0056b3;
+        }
+        .form-actions a.button {
+            padding: 10px 15px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
             display: inline-block;
-            vertical-align: middle;
-            margin-left: 5px;
+            line-height: 1.5;
         }
-        .rating-form input[type="number"] {
-            width: 60px;
-            padding: 5px;
+        .form-actions a.button:hover {
+            background-color: #5a6268;
         }
-        .back-link {
-            display: block;
-            margin-top: 20px;
-        }
+        .course-tags-display { margin-top: 5px; }
         .course-tags-display span {
             background-color: #e9ecef;
             padding: 4px 8px;
@@ -41,85 +59,80 @@
             display: inline-block;
             margin-bottom: 5px;
         }
-        .average-rating {
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #28a745;
-            margin-bottom: 15px;
-        }
-        .no-rating {
-            color: #6c757d;
-            font-style: italic;
-        }
-        .user-rating-display {
-            font-weight: bold;
-            margin-top: 10px;
-            color: #007bff;
-        }
-        .disabled-rating-form {
-            opacity: 0.7;
-            pointer-events: none;
-        }
     </style>
 </head>
 <body>
 
 <main layout:fragment="content">
-    <div th:if="${course}">
-        <h2>Детали курса: <span th:text="${course.title}">Название курса</span></h2>
+    <h2 th:text="${isNew} ? 'Добавить новый курс' : 'Редактировать курс'">Форма курса</h2>
 
-        <p><strong>Тематика:</strong> <span th:text="${course.subject}">Тематика</span></p>
-        <p><strong>Продолжительность:</strong> <span th:text="${course.duration}">Продолжительность</span></p>
-        <p><strong>Стоимость:</strong> <span th:text="${course.price}">Стоимость</span></p>
-        <p><strong>Описание:</strong> <span th:text="${course.description}">Описание</span></p>
+    <p class="success-message" th:if="${success}" th:text="${success}">Сообщение об успехе</p>
+    <p class="error-message" th:if="${error}" th:text="${error}">Сообщение об ошибке</p>
 
-        <div th:if="${not course.tags.empty}">
-            <strong>Теги:</strong>
-            <div class="course-tags-display">
-                <span th:each="tag : ${course.tags}" th:text="${tag.name}">Тег</span>
+    <!-- Используем th:with для явного определения URL действия формы -->
+    <th:block th:with="formActionUrl=${isNew} ? '/courses/new' : '/courses/' + ${courseDTO.id} + '/edit'">
+        <form action="#" th:action="${formActionUrl}" method="post" th:object="${courseDTO}">
+
+            <!-- Скрытое поле для ID курса при редактировании -->
+            <input type="hidden" th:field="*{id}" th:if="${!isNew}"/>
+
+            <div class="form-group">
+                <label for="title">Название:</label>
+                <input type="text" id="title" th:field="*{title}" required placeholder="Введите название курса"/>
+                <p class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*{title}">Error</p>
             </div>
-        </div>
 
-        <div class="average-rating" th:if="${averageRating != null && averageRating > 0}">
-            Средняя оценка: <span th:text="${#numbers.formatDecimal(averageRating, 1, 1)}">0.0</span> / 5.0
-        </div>
-        <div class="average-rating no-rating" th:unless="${averageRating != null && averageRating > 0}">
-        </div>
-
-        <div th:if="${currentUser}">
-            <div th:if="${userRating != null}">
-                <p class="user-rating-display">
-                    Ваша оценка: <span th:text="${userRating.score}">5</span> / 5
-                </p>
-                <p>Вы уже оценили этот курс. Изменить оценку нельзя.</p>
+            <div class="form-group">
+                <label for="subject">Тематика:</label>
+                <input type="text" id="subject" th:field="*{subject}" required placeholder="Введите тематику курса"/>
+                <p class="error-message" th:if="${#fields.hasErrors('subject')}" th:errors="*{subject}">Error</p>
             </div>
-            <div th:unless="${userRating != null}">
-                <form th:action="'/courses/' + ${course.id} + '/rate'" method="post" class="rating-form">
-                    <label for="score">Ваша оценка (1-5):</label>
-                    <input type="number" id="score" name="score" min="1" max="5" value="5"/>
-                    <button type="submit">Оценить</button>
-                </form>
+
+            <div class="form-group">
+                <label for="duration">Продолжительность:</label>
+                <input type="text" id="duration" th:field="*{duration}" placeholder="Например: 4 недели, 20 часов"/>
             </div>
-        </div>
 
-        <div class="course-actions" style="margin-top: 10px;">
-            <form th:action="'/courses/favorite/add/' + ${course.id}" method="post" style="display: inline;">
-                <button type="submit">Добавить в избранное</button>
-            </form>
+            <div class="form-group">
+                <label for="price">Стоимость:</label>
+                <input type="text" id="price" th:field="*{price}" placeholder="Например: 99.99"/>
+                <p class="error-message" th:if="${#fields.hasErrors('price')}" th:errors="*{price}">Error</p>
+            </div>
 
-            <a th:href="'/courses/' + ${course.id} + '/edit'" class="edit-button">Редактировать курс</a>
+            <div class="form-group">
+                <label for="description">Описание:</label>
+                <textarea id="description" th:field="*{description}" rows="4" placeholder="Введите описание курса"></textarea>
+            </div>
 
-            <form th:action="'/courses/' + ${course.id} + '/delete'" method="post" style="display: inline;">
-                <button type="submit" class="delete-button" onclick="return confirm('Вы уверены, что хотите удалить этот курс?');">Удалить курс</button>
-            </form>
-        </div>
+            <div class="form-group">
+                <label for="tagIds">Теги:</label>
+                <select id="tagIds" th:field="*{tagIds}" multiple>
+                    <option th:each="tag : ${allTags}"
+                            th:value="${tag.id}"
+                            th:selected="${courseDTO.tagIds != null && courseDTO.tagIds.contains(tag.id)}"
+                            th:text="${tag.name}">
+                        Имя тега
+                    </option>
+                </select>
+                <p class="error-message" th:if="${#fields.hasErrors('tagIds')}" th:errors="*{tagIds}">Error</p>
+            </div>
 
-        <a href="/courses" class="back-link">Назад к списку курсов</a>
-    </div>
-    <div th:unless="${course}">
-        <p>Курс не найден.</p>
-        <p><a href="/courses">Вернуться к списку курсов</a></p>
-    </div>
+            <div th:if="${!isNew and courseDTO.tagIds != null and !courseDTO.tagIds.isEmpty()}">
+                <div class="form-group">
+                    <strong>Выбранные теги:</strong>
+                    <div class="course-tags-display">
+                            <span th:each="tagId : ${courseDTO.tagIds}"
+                                  th:text="${tagNameMap.get(tagId)}">Имя тега</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" th:text="${isNew} ? 'Добавить курс' : 'Обновить курс'">Отправить</button>
+                <a th:href="${isNew} ? '/courses' : '/courses/' + ${courseDTO.id}" class="button">Отмена</a>
+            </div>
+        </form>
+    </th:block>
 </main>
 
 </body>

@@ -7,6 +7,7 @@ import com.example.onlinecoursescatalog.repository.CourseRepository;
 import com.example.onlinecoursescatalog.repository.RatingRepository;
 import com.example.onlinecoursescatalog.repository.TagRepository;
 import com.example.onlinecoursescatalog.repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,20 +19,14 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CourseService {
 
     private final CourseRepository courseRepository;
     private final TagRepository tagRepository;
     private final UserRepository userRepository;
     private final RatingRepository ratingRepository;
-
-    @Autowired
-    public CourseService(CourseRepository courseRepository, TagRepository tagRepository, UserRepository userRepository, RatingRepository ratingRepository) {
-        this.courseRepository = courseRepository;
-        this.tagRepository = tagRepository;
-        this.userRepository = userRepository;
-        this.ratingRepository = ratingRepository;
-    }
+    private final UserService userService;
 
     public List<Course> getAllCourses() {
         return courseRepository.findAll();
@@ -126,6 +121,18 @@ public class CourseService {
             rating.setScore(score);
             ratingRepository.save(rating);
         }
+    }
+
+    public Course saveCourseForUser(Course course, String username) {
+        User user = userService.findOrCreateUserByUsername(username);
+        List<Course> courses = user.getCourses();
+        course.setUser(user);
+        courses.add(course);
+        return courseRepository.save(course);
+    }
+
+    public List<Course> getCoursesByUserId(User currentUser) {
+        return courseRepository.findCoursesByUser(currentUser);
     }
 
     public static class CourseWithAverageRating {

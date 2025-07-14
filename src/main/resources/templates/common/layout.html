@@ -15,11 +15,11 @@
         <a href="/courses">Courses</a> |
         <span th:if="${currentUser != null}">
                 Welcome, <span th:text="${currentUser.username}">User</span>! |
-                <a href="/courses/my-favorites">My Favorites</a> |
-                <a href="/logout">Logout</a>
+                <a href="/courses/my-favorites">Избранное</a> |
+                <a href="/logout">Войти</a>
             </span>
         <span th:unless="${currentUser != null}">
-                <a href="/">Login</a>
+                <a href="/">Войти</a>
             </span>
     </nav>
 </header>
@@ -29,7 +29,7 @@
 </main>
 
 <footer>
-    <p>© 2023 Online Courses Catalog</p>
+    <p>© 2025 Online Courses Catalog</p>
 </footer>
 
 </body>
